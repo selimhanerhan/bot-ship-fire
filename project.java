@@ -109,11 +109,13 @@ public class project{
     //     }
 
     // }
+    private static Random random = new Random();
     public static void main(String[] args) {
         int maxDimension = 10; // Change this to your desired max dimension
         String x = "X";
         String o = "O";
         String[][] grid = createRandomGrid(maxDimension, x, o);
+        boolean result;
 
         // 3 - do this until there is no other currently blocked cells left
         while (hasBlockedCellOON(grid)) {
@@ -126,6 +128,46 @@ public class project{
         // print the final grid
         printGrid(grid);
         
+        // pick a random open cell for the bot
+        int[] locationBot = getRandomOpenCell(grid);
+        int[] locationFire = getRandomOpenCell(grid);
+        int[] locationButton = getRandomOpenCell(grid);
+        if(locationBot != null && locationFire != null && locationButton != null){
+            grid[locationBot[0]][locationBot[1]] = "B";
+            grid[locationFire[0]][locationFire[1]] = "F";
+            grid[locationButton[0]][locationButton[1]] = "E";
+        }
+        System.out.println();
+        printGrid(grid);
+
+        result = strategyOne(grid, locationBot, locationButton, locationFire);
+        
+        if(result){
+            System.out.println("Success");
+        }
+        else{
+            System.out.println("Failure");
+        }
+    }
+    public static boolean strategyOne(String[][] grid, int[] locationBot, int[] locationButton, int[] locationFire){
+        return true;
+        // need to implement the first strategy now
+    }
+
+    public static int[] getRandomOpenCell(String[][] grid) {
+        random = new Random();
+        int d = grid.length;
+
+        for (int i = 0; i < d * d; i++) {
+            int randomRow = random.nextInt(d);
+            int randomColumn = random.nextInt(d);
+
+            if (grid[randomRow][randomColumn].equals("O")) {
+                return new int[] { randomRow, randomColumn };
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -137,7 +179,7 @@ public class project{
      * @return
      */
     public static String[][] createRandomGrid(int maxDimension, String x, String o) {
-        Random random = new Random();
+        random = new Random();
         int d = random.nextInt(maxDimension) + 1;
         
         // 1 - create a grid with cell and row size equal to d
