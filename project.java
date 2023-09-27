@@ -1,117 +1,39 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Random;
 
+import org.w3c.dom.Node;
+
 public class project{
-    // // public static int maxDimension = 5;
-    // // public static Random random = new Random();
-    // // public static int d = random.nextInt(maxDimension) + 1;
-    // // public static String[][] grid = new String[d][d];
+
+    /**
+     * will calculate the heuristic of the distance from the bot to the fire and the button
+     * will get the heuristics from manhattan distance
+     * after getting the distances,
+     *  we will create firstGoal cell where its located between the fire cell and the button cell,
+     *  this location will be reachable with considering the fire expanding speed. 
+     * then bot will first initialize a 
+     */
     
 
-    // public static String[] currentValidBC(String[][] grid, int row, int column) {
-    //     int cursor = 0;
-    //     String[] neighbor = null;
-
-    // // Iterate over all the neighbors of the cell Z
-    //     for (int i = row - 1; i <= row + 1; i++) {
-    //         for (int j = column - 1; j <= column + 1; j++) {
-    //             // Check if the adjacent cell is within the bounds of the grid and has the value "a"
-    //             if (i >= 0 && i < grid.length && j >= 0 && j < grid[i].length && grid[i][j].equals("x")) {
-    //                 // Check if the adjacent cell has only one neighbor with the value of the cell that is located at the row and column parameters that are passed to the method
-    //                 if (countNeighborsWithSameValue(grid, i, j) == 1) {
-    //                     cursor++;
-    //                     neighbor = new String[]{i + "", j + ""};
-
-    //                     // If we have found a neighbor that meets the conditions, stop searching
-    //                     if (cursor == 1) {
-    //                         break;
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         // If we have found a neighbor that meets the conditions, stop searching
-    //         if (cursor == 1) {
-    //             break;
-    //         }
-    //     }
-
-    //     return neighbor;
-    //     }
-
-    // // public static String[] oneCurrentValidBC(String[][] grid, int row, int column) {
-    // //     List<String[]> neighbors = currentValidBCs(grid, row, column);
-    
-    // //     if (neighbors.isEmpty()) {
-    // //         return null;
-    // //     }
-    
-    // //     Random random = new Random();
-    // //     int randomIndex = random.nextInt(neighbors.size());
-    
-    // //     return neighbors.get(randomIndex);
-    // // }
-    // // i'm thinking to just get the first one
-
-    // private static int countNeighborsWithSameValue(String[][] grid, int i, int j) {
-    //     int count = 0;
-    //     for (int k = i - 1; k <= i + 1; k++) {
-    //         for (int l = j - 1; l <= j + 1; l++) {
-    //             if (k >= 0 && k < grid.length && l >= 0 && l < grid[k].length && grid[k][l].equals("o")) {
-    //                 count++;
-    //             }
-    //         }
-    //     }
-
-    //     return count;
-    // }
+    /**
+     * TO-DO
+     * 1- need to debug why sometimes it doesn't print the B
+     * 2- need to debug why it takes long time (do with breakpoints)
+     */
 
 
-    // public static String[][] createRandomGrid(int maxDimension, String x, String o) {
-    //     Random random = new Random();
-    //     int d = random.nextInt(maxDimension) + 1;
 
-    //     String[][] grid = new String[d][d];
-    //     for (int i = 0; i < d; i++) {
-    //         for (int j = 0; j < d; j++) {
-    //             grid[i][j] = x; // Initialize all cells in the row to x
-    //         }
-    //     }
-    //     int randomRow = random.nextInt(d);
-    //     int randomColumn = random.nextInt(d);
-    //     grid[randomRow][randomColumn] = o;
-        
-    //     // open the neighboor of the selected cell
-    //     int neighborRow = Integer.parseInt(currentValidBC(grid, randomRow, randomColumn)[0]);
-    //     int neighborColumn = Integer.parseInt(currentValidBC(grid, randomRow, randomColumn)[1]);
-    //     grid[neighborRow][neighborColumn] = o;
 
-    //     // i finished the 3b and now at 3c
-    //     // also need to figure out where i need to start the loop for 3
-        
-    //     return grid;
-    // }
 
-    // public static void main(String[] args) {
-    //     int maxDimension = 5;
-    //     String x = "x";
-    //     String o = "o";
-    //     String[][] grid = createRandomGrid(maxDimension, x, o);
-
-    //     // Print the grid
-    //     for (int i = 0; i < grid.length; i++) {
-    //         for (int j = 0; j < grid[i].length; j++) {
-    //             System.out.print(grid[i][j] + " ");
-    //         }
-    //         System.out.println();
-    //     }
-
-    // }
     private static Random random = new Random();
+    private static double flammability = 0.1;
+    
     public static void main(String[] args) {
-        int maxDimension = 10; // Change this to your desired max dimension
+        int maxDimension = 5; // Change this to your desired max dimension
         String x = "X";
         String o = "O";
         String[][] grid = createRandomGrid(maxDimension, x, o);
@@ -150,10 +72,124 @@ public class project{
         }
     }
     public static boolean strategyOne(String[][] grid, int[] locationBot, int[] locationButton, int[] locationFire){
-        return true;
-        // need to implement the first strategy now
+        int gridSize = grid.length;
+        boolean[][] visited = new boolean[gridSize][gridSize];
+
+        while (true) {
+            // Calculate distances to the button and the fire
+            double distanceToButton = calculateDistance(locationBot, locationButton);
+
+            // Check if the bot enters the button cell
+            if (locationBot[0] == locationButton[0] && locationBot[1] == locationButton[1]) {
+                return true; // Task completed
+            }
+
+            // Check if the bot and fire occupy the same cell
+            if (locationBot[0] == locationFire[0] && locationBot[1] == locationFire[1]) {
+                return false; // Task failed
+            }
+
+            // Spread the fire to neighboring cells
+            spreadFire(grid, flammability);
+
+            // Calculate heuristic values based on distances and open paths
+            double bestHeuristicValue = Double.NEGATIVE_INFINITY;
+            int bestRow = locationBot[0];
+            int bestCol = locationBot[1];
+
+            int[] dx = { -1, 1, 0, 0 };
+            int[] dy = { 0, 0, -1, 1 };
+
+            for (int i = 0; i < 4; i++) {
+                int newRow = locationBot[0] + dx[i];
+                int newCol = locationBot[1] + dy[i];
+
+                if (isValidCell(newRow, newCol, grid) && !visited[newRow][newCol] && !grid[newRow][newCol].equals("X")) {
+                    double newDistanceToButton = calculateDistance(new int[]{newRow, newCol}, locationButton);
+                    double heuristicValue = newDistanceToButton;
+                    
+                    // Check if the cell is on fire
+                    if (grid[newRow][newCol].equals("F")) {
+                        heuristicValue += 100.0; // Discourage moving towards fire
+                    }
+                    
+                    if (heuristicValue > bestHeuristicValue) {
+                        bestHeuristicValue = heuristicValue;
+                        bestRow = newRow;
+                        bestCol = newCol;
+                    }
+                }
+            }
+
+            // Move the bot to the cell with the best heuristic value
+            visited[locationBot[0]][locationBot[1]] = true;
+            locationBot[0] = bestRow;
+            locationBot[1] = bestCol;
+
+            // Print the updated grid
+            grid[bestRow][bestCol] = "B";
+            
+        }
     }
 
+    static class Node {
+        int row, col;
+        double cost;
+
+        Node(int row, int col, double cost) {
+            this.row = row;
+            this.col = col;
+            this.cost = cost;
+        }
+    }
+    public static double calculateDistance(int[] cell1, int[] cell2) {
+        int dx = cell1[0] - cell2[0];
+        int dy = cell1[1] - cell2[1];
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+    public static void spreadFire(String[][] grid, double flammability) {
+        int gridSize = grid.length;
+        String[][] newGrid = new String[gridSize][gridSize];
+
+        int[] dx = { -1, 1, 0, 0 };
+        int[] dy = { 0, 0, -1, 1 };
+
+        for (int row = 0; row < gridSize; row++) {
+            for (int col = 0; col < gridSize; col++) {
+                if (grid[row][col].equals("O")) {
+                    int burningNeighbors = 0;
+
+                    for (int i = 0; i < 4; i++) {
+                        int newRow = row + dx[i];
+                        int newCol = col + dy[i];
+
+                        if (isValidCell(newRow, newCol, grid) && grid[newRow][newCol].equals("F")) {
+                            burningNeighbors++;
+                        }
+                    }
+
+                    double probability = 1.0 - Math.pow(1.0 - flammability, burningNeighbors);
+
+                    if (Math.random() < probability) {
+                        newGrid[row][col] = "F"; // Cell catches fire
+                    } else {
+                        newGrid[row][col] = "O"; // Cell remains open
+                    }
+                } else {
+                    newGrid[row][col] = grid[row][col]; // Blocked, Bot, Button, or Fire cells remain unchanged
+                }
+            }
+        }
+
+        // Update the original grid with the new fire spread
+        for (int row = 0; row < gridSize; row++) {
+            for (int col = 0; col < gridSize; col++) {
+                grid[row][col] = newGrid[row][col];
+            }
+        }
+    }
+
+    // creating the grid
     public static int[] getRandomOpenCell(String[][] grid) {
         random = new Random();
         int d = grid.length;
