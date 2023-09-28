@@ -21,8 +21,7 @@ public class project{
 
     /**
      * TO-DO
-     * 1- need to debug why sometimes it doesn't print the B
-     * 2- need to debug why it takes long time (do with breakpoints)
+     * 1- need to figure out a new way to execute strategy one.
      */
 
 
@@ -52,13 +51,22 @@ public class project{
         
         // pick a random open cell for the bot
         int[] locationBot = getRandomOpenCell(grid);
-        int[] locationFire = getRandomOpenCell(grid);
-        int[] locationButton = getRandomOpenCell(grid);
-        if(locationBot != null && locationFire != null && locationButton != null){
+        if(locationBot != null){
             grid[locationBot[0]][locationBot[1]] = "B";
+        }
+        int[] locationFire = getRandomOpenCell(grid);
+        if(locationFire != null){
             grid[locationFire[0]][locationFire[1]] = "F";
+        }
+        int[] locationButton = getRandomOpenCell(grid);
+        if(locationButton != null){
             grid[locationButton[0]][locationButton[1]] = "E";
         }
+        // if(locationBot != null && locationFire != null && locationButton != null && locationBot != locationFire && locationButton != locationFire){
+        //     grid[locationBot[0]][locationBot[1]] = "B";
+        //     grid[locationFire[0]][locationFire[1]] = "F";
+        //     grid[locationButton[0]][locationButton[1]] = "E";
+        // }
         System.out.println();
         printGrid(grid);
 
@@ -71,13 +79,14 @@ public class project{
             System.out.println("Failure");
         }
     }
+
     public static boolean strategyOne(String[][] grid, int[] locationBot, int[] locationButton, int[] locationFire){
         int gridSize = grid.length;
         boolean[][] visited = new boolean[gridSize][gridSize];
 
         while (true) {
             // Calculate distances to the button and the fire
-            double distanceToButton = calculateDistance(locationBot, locationButton);
+            double distanceToButton = calculateDistance( locationBot, locationButton);
 
             // Check if the bot enters the button cell
             if (locationBot[0] == locationButton[0] && locationBot[1] == locationButton[1]) {
@@ -129,6 +138,8 @@ public class project{
             // Print the updated grid
             grid[bestRow][bestCol] = "B";
             
+
+            
         }
     }
 
@@ -142,11 +153,16 @@ public class project{
             this.cost = cost;
         }
     }
+    //euclidian distance
     public static double calculateDistance(int[] cell1, int[] cell2) {
         int dx = cell1[0] - cell2[0];
         int dy = cell1[1] - cell2[1];
-        return Math.sqrt(dx * dx + dy * dy);
+        return Math.sqrt((dx * dx) + (dy * dy));
     }
+
+    
+        
+    
     public static void spreadFire(String[][] grid, double flammability) {
         int gridSize = grid.length;
         String[][] newGrid = new String[gridSize][gridSize];
