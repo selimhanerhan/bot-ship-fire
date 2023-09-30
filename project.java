@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Random;
 
-import org.w3c.dom.Node;
 
 public class project{
 
@@ -22,7 +21,7 @@ public class project{
     /**
      * TO-DO
      * 1- when button or bot cell catches a fire it should return false
-     * 
+     * countNeighboor works fine
      */
 
 
@@ -80,18 +79,20 @@ public class project{
         // }
         System.out.println();
         printGrid(grid);
-        
-        for(int i = 0; i < maxTimesTamp; i++){
-            spreadFire(grid,locationFire[0],locationFire[1], flammability);
-            result = strategyOne(grid, locationBot, locationButton, locationFire);
+        int cur = 0;
+        for (int i = 0; i < maxTimesTamp; i++) {
+            // Execute the spreadFire method here
+            spreadFire(grid, locationFire[0], locationFire[1], flammability, cur);
             
-            
-            if(result){
+            // Execute the strategyOne method here
+            result = strategyOne(grid, locationBot, locationButton, locationFire, flammability, cur);
+    
+            if (result) {
                 System.out.println("Success");
-                break;
-            }
-            else{
+                break; // Exit the loop when strategyOne returns true
+            } else {
                 System.out.println("Failure");
+                break;
                 
             }
         }
@@ -112,110 +113,167 @@ public class project{
     }
     //euclidian distance
     
-    public static boolean strategyOne(String[][] grid, int[] botPosition, int[] buttonPosition, int[] initialFirePosition) {
-        int gridSize = grid.length;
-        boolean[][] visited = new boolean[gridSize][gridSize];
+    // public static boolean strategyOne(String[][] grid, int[] botPosition, int[] buttonPosition, int[] initialFirePosition) {
+    //     int gridSize = grid.length;
+    //     boolean[][] visited = new boolean[gridSize][gridSize];
 
-        PriorityQueue<int[]> queue = new PriorityQueue<>(new Comparator<int[]>() {
-        @Override
-        public int compare(int[] cell1, int[] cell2) {
-            int distance1 = calculateManhattanDistance(cell1, buttonPosition);
-            int distance2 = calculateManhattanDistance(cell2, buttonPosition);
-            return Integer.compare(distance1, distance2);
-        }
-    });
+    //     PriorityQueue<int[]> queue = new PriorityQueue<>(new Comparator<int[]>() {
+    //     @Override
+    //     public int compare(int[] cell1, int[] cell2) {
+    //         int distance1 = calculateManhattanDistance(cell1, buttonPosition);
+    //         int distance2 = calculateManhattanDistance(cell2, buttonPosition);
+    //         return Integer.compare(distance1, distance2);
+    //     }
+    // });
 
-        queue.add(botPosition);
+    //     queue.add(botPosition);
 
-        while (!queue.isEmpty()) {
-            int[] current = queue.poll();
+    //     while (!queue.isEmpty()) {
+    //         int[] current = queue.poll();
 
-        // Check if the bot enters the button cell
-            if (current[0] == buttonPosition[0] && current[1] == buttonPosition[1]) {
-                return true; // Task completed
-            }
+    //     // Check if the bot enters the button cell
+    //         if (current[0] == buttonPosition[0] && current[1] == buttonPosition[1]) {
+    //             return true; // Task completed
+    //         }
 
-            // Check if the bot and fire cells are equal
-            if (current[0] == initialFirePosition[0] && current[1] == initialFirePosition[1]) {
-                return false; // Bot caught by fire, return failure
-            }
+    //         // Check if the bot and fire cells are equal
+    //         if (current[0] == initialFirePosition[0] && current[1] == initialFirePosition[1]) {
+    //             return false; // Bot caught by fire, return failure
+    //         }
 
-            visited[current[0]][current[1]] = true;
+    //         visited[current[0]][current[1]] = true;
 
-            int[] dx = { -1, 1, 0, 0 };
-            int[] dy = { 0, 0, -1, 1 };
+    //         int[] dx = { -1, 1, 0, 0 };
+    //         int[] dy = { 0, 0, -1, 1 };
 
-            for (int i = 0; i < 4; i++) {
-                int newRow = current[0] + dx[i];
-                int newCol = current[1] + dy[i];
+    //         for (int i = 0; i < 4; i++) {
+    //             int newRow = current[0] + dx[i];
+    //             int newCol = current[1] + dy[i];
 
-                if (isValidCell(newRow, newCol, grid) && !visited[newRow][newCol] && !grid[newRow][newCol].equals("X")) {
-                    // Check if the new cell is on fire (initial fire cell is avoided)
-                    if (newRow == initialFirePosition[0] && newCol == initialFirePosition[1]) {
-                        continue;
-                    }
+    //             if (isValidCell(newRow, newCol, grid) && !visited[newRow][newCol] && !grid[newRow][newCol].equals("X")) {
+    //                 // Check if the new cell is on fire (initial fire cell is avoided)
+    //                 if (newRow == initialFirePosition[0] && newCol == initialFirePosition[1]) {
+    //                     continue;
+    //                 }
 
-                    queue.add(new int[]{newRow, newCol});
-                }
-            }
-        }
+    //                 queue.add(new int[]{newRow, newCol});
+    //             }
+    //         }
+    //     }
 
-        return false;
-        }
-
-    // Calculate Manhattan distance between two cells
+    //     return false;
+    //     }
+     // Calculate Manhattan distance between two cells
     public static int calculateManhattanDistance(int[] cell1, int[] cell2) {
         return Math.abs(cell1[0] - cell2[0]) + Math.abs(cell1[1] - cell2[1]);
     }
+
+    // public static boolean strategyOne(String[][] grid, int[] botPosition, int[] buttonPosition, int[] initialFirePosition, double flammability, int cur) {
+    //     int gridSize = grid.length;
+    //     boolean[][] visited = new boolean[gridSize][gridSize];
+    
+    //     PriorityQueue<int[]> queue = new PriorityQueue<>(new Comparator<int[]>() {
+    //         @Override
+    //         public int compare(int[] cell1, int[] cell2) {
+    //             int distance1 = calculateManhattanDistance(cell1, buttonPosition);
+    //             int distance2 = calculateManhattanDistance(cell2, buttonPosition);
+    //             return Integer.compare(distance1, distance2);
+    //         }
+    //     });
+    
+    //     queue.add(botPosition);
+    
+    //     if (!queue.isEmpty()) {
+    //         int[] current = queue.poll();
+            
+    //         // Check if the bot enters the button cell
+    //         cur++;
+    //         if (current[0] == buttonPosition[0] && current[1] == buttonPosition[1]) {
+    //             return true; // Task completed
+    //         }
+    
+    //         // Check if the bot and fire cells are equal
+    //         if (current[0] == initialFirePosition[0] && current[1] == initialFirePosition[1]) {
+    //             return false; // Bot caught by fire, return failure
+    //         }
+    
+    //         visited[current[0]][current[1]] = true;
+    
+    //         int[] dx = { -1, 1, 0, 0 };
+    //         int[] dy = { 0, 0, -1, 1 };
+    
+    //         // Spread fire for the current time step
+    //         printGrid(grid);
+    //         //spreadFire(grid, initialFirePosition[0], initialFirePosition[1], flammability, cur);
+    
+    //         for (int i = 0; i < 4; i++) {
+    //             int newRow = current[0] + dx[i];
+    //             int newCol = current[1] + dy[i];
+    
+    //             if (isValidCell(newRow, newCol, grid) && !visited[newRow][newCol] && !grid[newRow][newCol].equals("X")) {
+    //                 // Check if the new cell is on fire (initial fire cell is avoided)
+    //                 if (newRow == initialFirePosition[0] && newCol == initialFirePosition[1]) {
+    //                     continue;
+    //                 }
+    
+    //                 queue.add(new int[]{newRow, newCol});
+    //             }
+    //         }
+    //     }
+    
+    //     return false;
+    // }
+    public static boolean strategyOne(String[][] grid, int[] botPosition, int[] buttonPosition, int[] initialFirePosition, double flammability, int cur) {
+        // Base case 1: If the bot enters the button cell, return true
+        if (botPosition[0] == buttonPosition[0] && botPosition[1] == buttonPosition[1]) {
+            return true;
+        }
+    
+        // Base case 2: If the bot and fire cells are equal, return false
+        if (botPosition[0] == initialFirePosition[0] && botPosition[1] == initialFirePosition[1]) {
+            return false;
+        }
+    
+        int[] dx = { -1, 1, 0, 0 };
+        int[] dy = { 0, 0, -1, 1 };
+    
+        for (int i = 0; i < 4; i++) {
+            int newRow = botPosition[0] + dx[i];
+            int newCol = botPosition[1] + dy[i];
+    
+            if (isValidCell(newRow, newCol, grid) && !grid[newRow][newCol].equals("X")) {
+                // Check if the new cell is on fire (initial fire cell is avoided)
+                if(grid[newRow][newCol] == "F"){
+                    return false;
+                }
+                else if (grid[newRow][newCol] == "E"){
+                    return true;
+                }
+                else{
+                    continue;
+                }
+                // Recursively check the next cell
+                //boolean result = strategyOne(grid, new int[]{newRow, newCol}, buttonPosition, initialFirePosition, flammability, cur);
+                // i need to stop here and not recursively call it because then I won't run this code at the same time as spreadFire
+                // If the result is true, return true
+                // if (result) {
+                //     return true;
+                // }
+                
+            }
+        }
+    
+        // If none of the adjacent cells lead to a successful path, return false
+        return false;
+    }
+
+   
 
 
     
         
     
-    // public static void spreadFire(String[][] grid, double flammability) {
-    //     int gridSize = grid.length;
-    //     String[][] newGrid = new String[gridSize][gridSize];
-
-    //     int[] dx = { -1, 1, 0, 0 };
-    //     int[] dy = { 0, 0, -1, 1 };
-    //     int burningNeighbors = 0;
-
-    //     for (int row = 0; row < gridSize; row++) {
-    //         for (int col = 0; col < gridSize; col++) {
-    //             if (grid[row][col].equals("O")) {
-                    
-    //                 for (int i = 0; i < 4; i++) {
-    //                     int newRow = row + dx[i];
-    //                     int newCol = col + dy[i];
-
-    //                     if (isValidCell(newRow, newCol, grid) && grid[newRow][newCol].equals("F")) {
-    //                         burningNeighbors++;
-    //                     }
-    //                 }
-                    
-    //                 double probability = 1.0 - Math.pow((1.0 - flammability), burningNeighbors);
-    //                 double randomDouble = random.nextDouble() * (1.0 - 0.0) + 0.0;
-                    
-    //                 if (randomDouble < probability) {
-    //                     newGrid[row][col] = "F"; // Cell catches fire
-    //                     burningNeighbors++;
-    //                 } else {
-    //                     newGrid[row][col] = "O"; // Cell remains open
-    //                 }
-    //             } else {
-    //                 newGrid[row][col] = grid[row][col]; // Blocked, Bot, Button, or Fire cells remain unchanged
-    //             }
-    //         }
-    //     }
-
-    //     // Update the original grid with the new fire spread
-    //     for (int row = 0; row < gridSize; row++) {
-    //         for (int col = 0; col < gridSize; col++) {
-    //             grid[row][col] = newGrid[row][col];
-    //         }
-    //     }
-    // }
-    public static void spreadFire(String[][] grid, int row, int col, double flammability) {
+    public static void spreadFire(String[][] grid, int row, int col, double flammability, int cur) {
     
         // Define the neighboring directions
         int[] dx = { -1, 1, 0, 0 };
@@ -235,9 +293,11 @@ public class project{
     
                 if (randomDouble < probability) {
                     grid[newRow][newCol] = "F"; // Cell catches fire
+                    cur--;
                     // Recursively spread fire to the newly ignited cell
                     
-                    spreadFire(grid, newRow, newCol, flammability);
+                    // spreadFire(grid, newRow, newCol, flammability);
+                    printGrid(grid);
                 }
             }
         }
@@ -405,6 +465,7 @@ public class project{
      * @param grid
      */
     public static void printGrid(String[][] grid) {
+        System.out.println();
         for (String[] row : grid) {
             for (String cell : row) {
                 System.out.print(cell + " ");
