@@ -11,8 +11,8 @@ public class project{
     
     /**
      * TO-DO
-     * 1- Double check the strategy one
-     * 2- Start to work on strategy two
+     * 1- I need to check if we are really running every possible neighbors then do the strategy 2
+     * 2- I need to check if fire is spreading correctly when it gets to strategy 2
      */
 
     private static Random random = new Random();
@@ -64,8 +64,9 @@ public class project{
 
         printGrid(grid);
         
-        //result = strategyOne(grid, locationBot, locationButton, locationFire, flammability);
-        result = strategyOne(grid,locationBot,locationButton, locationFire);
+        //result = strategyOne(grid,locationBot,locationButton, locationFire);
+        //result = strategyTwo(grid, locationBot[0],locationBot[1], locationButton, locationFire);
+        result = strategyThree(grid, locationBot, locationButton, locationFire);
         if(result){
             System.out.println("success");
             
@@ -89,11 +90,6 @@ public class project{
         }
     }
     
-    public static int calculateManhattanDistance(int[] cell1, int[] cell2) {
-        return Math.abs(cell1[0] - cell2[0]) + Math.abs(cell1[1] - cell2[1]);
-    }
-
-   
     public static boolean strategyOne(String[][] grid, int[] locationBot, int[] locationButton, int[] locationFire) {
         PriorityQueue<Node> priorityQueue = new PriorityQueue<>(new Comparator<Node>() {
             @Override
@@ -108,7 +104,7 @@ public class project{
 
         while (!priorityQueue.isEmpty()) {
             Node currentNode = priorityQueue.poll();
-            grid[currentNode.row][currentNode.col] = "B";
+            //grid[currentNode.row][currentNode.col] = "B";
             // Check if the current node is the goal node.
             if (currentNode.row == locationButton[0] && currentNode.col == locationButton[1]) {
                 // Return the path to the goal node.
@@ -146,6 +142,10 @@ public class project{
         // No path found.
         return false;
     }
+
+    /**
+     * Get neighbors without checking the fire cells
+     */
     private static List<int[]> getNeighbors(String[][] grid, int x, int y) {
         List<int[]> neighbors = new ArrayList<>();
 
@@ -160,6 +160,196 @@ public class project{
 
         return neighbors;
     }
+
+    public static boolean strategyTwo(String[][] grid, int botRow, int botCol, int[] locationButton, int[] locationFire) {
+        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(new Comparator<Node>() {
+            @Override
+            public int compare(Node node1, Node node2) {
+                return Double.compare(node1.cost, node2.cost);
+            }
+        });
+        Set<Node> explored = new HashSet<>();
+
+        // Add the starting node to the frontier.
+        priorityQueue.add(new Node(botRow, botCol, 0, null));
+
+        while (!priorityQueue.isEmpty()) {
+            Node currentNode = priorityQueue.poll();
+            //grid[currentNode.row][currentNode.col] = "B";
+            // Check if the current node is the goal node.
+            if (currentNode.row == locationButton[0] && currentNode.col == locationButton[1]) {
+                // Return the path to the goal node.
+                return true;
+            }
+
+            // Add the current node to the explored set.
+            explored.add(currentNode);
+            
+            // Expand the current node.
+            for (int[] neighbor : getNeighborsWithoutFire( grid, currentNode.row, currentNode.col)) {
+                int neighborRow = neighbor[0];
+                int neighborCol = neighbor[1];
+                // !!!! need to check here whether it is valid cell or not !!!!!!
+                if(grid[neighborRow][neighborCol].equals("O")){
+                    // check if the neighbor node is not explored
+                    if (!explored.contains(new Node(neighborRow, neighborCol, 0, null))) {
+                        // Add the neighbor node to the frontier.
+                        priorityQueue.add(new Node(neighborRow, neighborCol, currentNode.cost + 1, currentNode));
+                    }
+                }
+                else if(grid[neighborRow][neighborCol].equals("E")){
+                    return true;
+                }
+                else{
+                    continue;
+                }
+            }
+            spreadFire(grid, locationFire[0], locationFire[1], flammability);
+            if(grid[locationButton[0]][locationButton[1]].equals("F")){
+                return false;
+            }
+        }
+
+        // No path found.
+        return false;
+    }
+
+    // This function returns the neighbors of a given node that are not fire cells.
+    private static List<int[]> getNeighborsWithoutFire(String[][] grid, int x, int y) {
+        List<int[]> neighbors = new ArrayList<>();
+
+        // Define the relative coordinates of the neighboring cells.
+        int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+        for (int[] dir : directions) {
+            int newX = x + dir[0];
+            int newY = y + dir[1];
+
+            // Check if the neighboring cell is within the grid bounds.
+            if (isValidCell(newX, newY, grid) && grid[newX][newY].equals("O")) {
+                // Check if the neighboring cell does not contain "F" (fire).
+                if (!grid[newX][newY].equals("F")) {
+                    neighbors.add(new int[]{newX, newY});
+                }
+            }
+        }
+
+        return neighbors;
+} 
+
+    public static boolean strategyThree(String[][] grid, int[] locationBot, int[] locationButton, int[] locationFire) {
+        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(new Comparator<Node>() {
+            @Override
+            public int compare(Node node1, Node node2) {
+                return Double.compare(node1.cost, node2.cost);
+            }
+        });
+        Set<Node> explored = new HashSet<>();
+
+        // Add the starting node to the frontier.
+        priorityQueue.add(new Node(locationBot[0], locationBot[1], 0, null));
+        Node currentNode;
+        while (!priorityQueue.isEmpty()) {
+            currentNode = priorityQueue.poll();
+
+            // Check if the current node is the goal node.
+            if (currentNode.row == locationButton[0] && currentNode.col == locationButton[1]) {
+                // Return the path to the goal node.
+                return true;
+            }
+
+            // Add the current node to the explored set.
+            explored.add(currentNode);
+            
+            
+            // Expand the current node.
+            for (int[] neighbor : getNeighborsWithoutAdjacentFireCells(grid, currentNode.row, currentNode.col)) {
+                int neighborRow = neighbor[0];
+                int neighborCol = neighbor[1];
+
+                // Check if the neighbor node is open and not explored.
+                if (grid[neighborRow][neighborCol].equals("O")) {
+                    // Add the neighbor node to the frontier.
+                    if(!explored.contains(new Node(neighborRow, neighborCol, 0, null))){
+                        priorityQueue.add(new Node(neighborRow, neighborCol, currentNode.cost + 1, currentNode));
+
+                    }
+                }
+                else if(grid[neighborRow][neighborCol].equals("E")){
+                    return true;
+                }
+               // problem is now it gets into a loop where it have the nodes in the explored list but
+               // it keeps iterating to there even though the cells are in the explored list. 
+               // need to find a way to have the explored.contains without checking the cost but only checkin row and column
+            }
+            // i need to check if we are really running every possible neighbors then do the strategy 2
+            // i need to check if fire is spreading correctly when it gets to strategy 2
+            if(priorityQueue.isEmpty()){
+                return strategyTwo(grid, currentNode.row, currentNode.col, locationButton, locationFire);
+            }
+            spreadFire(grid,locationFire[0], locationFire[1], flammability);
+            if(grid[locationButton[0]][locationButton[1]].equals("F")){
+                return false;
+            }
+            
+        }
+        // i need to add new cells to priority queue then iterate through those cells.
+        // before bot moves to any direction, it needs to have a clear shortest path, then it moves.
+        // it gets to here when it doesn't find any neighboring cells without being adjacent to fire cell
+        // if(getNeighborsWithoutAdjacentFireCells(grid, currentNode.row, currentNode.col) == null){
+        //     // If there is no such path, it plans the shortest path based only on current fire cells
+
+        // }
+        
+        
+
+        // No path found.
+        return false;
+    }
+
+    public static boolean canPickCell(String[][] grid, int x, int y) {
+        if (grid[x][y].equals("O") || grid[x][y].equals("E")) {
+            if(grid[x][y].equals("E")){
+                return true;
+            }
+            for (int[] neighbor : getNeighbors(grid, x, y)) {
+                if (grid[neighbor[0]][neighbor[1]].equals("F")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+      }
+      
+
+      private static List<int[]> getNeighborsWithoutAdjacentFireCells(String[][] grid, int x, int y) {
+        List<int[]> neighbors = new ArrayList<>();
+    
+        // Add the four neighboring cells.
+        neighbors.add(new int[]{x, y + 1});
+        neighbors.add(new int[]{x + 1, y});
+        neighbors.add(new int[]{x, y - 1});
+        neighbors.add(new int[]{x - 1, y});
+    
+        // Remove any neighbors that are fire cells or adjacent to fire cells.
+        neighbors.removeIf(neighbor -> neighbor[0] < 0 || neighbor[0] >= grid.length || neighbor[1] < 0 || neighbor[1] >= grid[0].length || grid[neighbor[0]][neighbor[1]].equals("F") || isAdjacentToFireCell(neighbor[0], neighbor[1], grid));
+    
+        return neighbors;
+    }
+    // check if the neighboring cell is adjacent to fire, if it is in the first attempt you try to find another path
+    // if it is not adjacent then you go there anyway
+    private static boolean isAdjacentToFireCell(int x, int y, String[][] grid) {
+        // Check the four neighboring cells.
+        for (int[] neighbor : getNeighbors(grid, x, y)) {
+            if (grid[neighbor[0]][neighbor[1]].equals("F")) {
+                return true;
+            }
+        }
+    
+        return false;
+    }
+    
+
 
     /**
      * Spreading the fire for current timestamp
@@ -192,12 +382,15 @@ public class project{
                         // Recursively spread fire to the newly ignited cell
                         
                         // spreadFire(grid, newRow, newCol, flammability);
-                        printGrid(grid);
+                        
                     }
+                    
                 }
                 
             }
+            
         }
+        printGrid(grid);
     }
     
     public static int countBurningNeighbors(String[][] grid, int row, int col) {
