@@ -18,6 +18,10 @@ public class project{
         small to-do:
         a- i need to check what happens when fire catches bot
         b- I need to check if we are really running every possible neighbors then do the strategy 2
+
+        need to change:
+        make the grid size randomInt (comment out first lines in createRandomGrid)
+        
      */
 
     private static Random random = new Random();
