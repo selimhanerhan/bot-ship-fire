@@ -12,7 +12,12 @@ public class project{
     /**
      * TO-DO
      * 1- I need to check if we are really running every possible neighbors then do the strategy 2
-     * 2- I need to check if fire is spreading correctly when it gets to strategy 2
+     * 2- I need to check if fire is spreading correctly when it gets to strategy 2 (locationFire is never updated)
+        maxDimension shouldn't be anything less than 30 
+
+        small to-do:
+        a- i need to check what happens when fire catches bot
+        b- I need to check if we are really running every possible neighbors then do the strategy 2
      */
 
     private static Random random = new Random();
@@ -23,57 +28,112 @@ public class project{
     public static void main(String[] args) {
         String x = "X";
         String o = "O";
-        String[][] grid = createRandomGrid(maxDimension, x, o);
-        boolean result;
+        int success = 0, loses = 0;
+        for(int i = 0; i < 10; i++){
+            String[][] grid = createRandomGrid(maxDimension, x, o);
+            boolean result;
 
-        // 3 - do this until there is no other currently blocked cells left
-        while (hasBlockedCellOON(grid)) {
-            openBlockedCellWOON(grid);
-        }
+            // 3 - do this until there is no other currently blocked cells left
+            while (hasBlockedCellOON(grid)) {
+                openBlockedCellWOON(grid);
+            }
 
-        // 4 & 5 - identify the dead ends and open half of them  
-        openDeadEnds(grid, 0.5); 
-        
-        // print the final grid
-        printGrid(grid);
-        
-        // pick a random open cell for the bot
-        int[] locationBot = getRandomOpenCell(grid);
-        if(locationBot != null){
-            grid[locationBot[0]][locationBot[1]] = "B";
-        }
-        else{
-            return;
-        }
-        int[] locationFire = getRandomOpenCell(grid);
-        if(locationFire != null){
-            grid[locationFire[0]][locationFire[1]] = "F";
-        }
-        else{
-            return;
-        }
-        int[] locationButton = getRandomOpenCell(grid);
-        if(locationButton != null){
-            grid[locationButton[0]][locationButton[1]] = "E";
-        }
-        else{
-            return;
-        }
-        
-        System.out.println();
-
-        printGrid(grid);
-        
-        //result = strategyOne(grid,locationBot,locationButton, locationFire);
-        //result = strategyTwo(grid, locationBot[0],locationBot[1], locationButton, locationFire);
-        result = strategyThree(grid, locationBot, locationButton, locationFire);
-        if(result){
-            System.out.println("success");
+            // 4 & 5 - identify the dead ends and open half of them  
+            openDeadEnds(grid, 0.5); 
             
+            // print the final grid
+            // printGrid(grid);
+            
+            // pick a random open cell for the bot
+            int[] locationBot = getRandomOpenCell(grid);
+            if(locationBot != null){
+                grid[locationBot[0]][locationBot[1]] = "B";
+            }
+            else{
+                return;
+            }
+            int[] locationFire = getRandomOpenCell(grid);
+            if(locationFire != null){
+                grid[locationFire[0]][locationFire[1]] = "F";
+            }
+            else{
+                return;
+            }
+            int[] locationButton = getRandomOpenCell(grid);
+            if(locationButton != null){
+                grid[locationButton[0]][locationButton[1]] = "E";
+            }
+            else{
+                return;
+            }
+            
+            // System.out.println();
+
+            // printGrid(grid);
+
+            result = strategyOne(grid, locationBot, locationButton, locationFire);
+            if(result){
+                success++;
+                continue;
+            }
+            else{
+                loses++;
+                continue;
+            }
+
         }
-        else{
-            System.out.println("failure");
-        }
+        System.out.println("success rate:"+ success + "lose rate:" + loses);
+        // String[][] grid = createRandomGrid(maxDimension, x, o);
+        // boolean result;
+
+        // // 3 - do this until there is no other currently blocked cells left
+        // while (hasBlockedCellOON(grid)) {
+        //     openBlockedCellWOON(grid);
+        // }
+
+        // // 4 & 5 - identify the dead ends and open half of them  
+        // openDeadEnds(grid, 0.5); 
+        
+        // // print the final grid
+        // printGrid(grid);
+        
+        // // pick a random open cell for the bot
+        // int[] locationBot = getRandomOpenCell(grid);
+        // if(locationBot != null){
+        //     grid[locationBot[0]][locationBot[1]] = "B";
+        // }
+        // else{
+        //     return;
+        // }
+        // int[] locationFire = getRandomOpenCell(grid);
+        // if(locationFire != null){
+        //     grid[locationFire[0]][locationFire[1]] = "F";
+        // }
+        // else{
+        //     return;
+        // }
+        // int[] locationButton = getRandomOpenCell(grid);
+        // if(locationButton != null){
+        //     grid[locationButton[0]][locationButton[1]] = "E";
+        // }
+        // else{
+        //     return;
+        // }
+        
+        // System.out.println();
+
+        // printGrid(grid);
+        
+        // //result = strategyOne(grid,locationBot,locationButton, locationFire);
+        // //result = strategyTwo(grid, locationBot[0],locationBot[1], locationButton, locationFire);
+        // result = strategyThree(grid, locationBot, locationButton, locationFire);
+        // if(result){
+        //     System.out.println("success");
+            
+        // }
+        // else{
+        //     System.out.println("failure");
+        // }
     }
     
     private static class Node {
@@ -236,7 +296,16 @@ public class project{
 
         return neighbors;
 } 
-
+    /**
+     * TOUGHTS: (THIS MAY NOT BE NEEDED SINCE IT IS A VERY SMALL EDGE CASE)
+     * To make this better structured, we can just have two methods. CBL = CURRENT BOT LOCATION - CFL = CURRENT FIRE LOCATION
+     * 1- strategyThree:
+     *      it calls the strategyThreeHelper method, 
+     *        if it returns true, then return true, 
+     *        if it returns false in the first time, run it again, if it returns false in the second time, just call strategy two and return whatever that returns
+     * 2- strategyThreeHelper(currentBotLocation, locationButton, currentFireLocations)
+     *      you can try to find a path from CBL to locationButton by avoiding the neighboring cells that is adjacent to CFL.
+     */
     public static boolean strategyThree(String[][] grid, int[] locationBot, int[] locationButton, int[] locationFire) {
         PriorityQueue<Node> priorityQueue = new PriorityQueue<>(new Comparator<Node>() {
             @Override
@@ -244,7 +313,7 @@ public class project{
                 return Double.compare(node1.cost, node2.cost);
             }
         });
-        Set<Node> explored = new HashSet<>();
+        Set<String> explored = new HashSet<>();
 
         // Add the starting node to the frontier.
         priorityQueue.add(new Node(locationBot[0], locationBot[1], 0, null));
@@ -259,7 +328,8 @@ public class project{
             }
 
             // Add the current node to the explored set.
-            explored.add(currentNode);
+            String currentKey = currentNode.row + "-" + currentNode.col;
+            explored.add(currentKey);
             
             
             // Expand the current node.
@@ -270,7 +340,8 @@ public class project{
                 // Check if the neighbor node is open and not explored.
                 if (grid[neighborRow][neighborCol].equals("O")) {
                     // Add the neighbor node to the frontier.
-                    if(!explored.contains(new Node(neighborRow, neighborCol, 0, null))){
+                    String neighboringKey = neighborRow + "-" + neighborCol;
+                    if(!explored.contains(neighboringKey)){
                         priorityQueue.add(new Node(neighborRow, neighborCol, currentNode.cost + 1, currentNode));
 
                     }
@@ -278,9 +349,10 @@ public class project{
                 else if(grid[neighborRow][neighborCol].equals("E")){
                     return true;
                 }
-               // problem is now it gets into a loop where it have the nodes in the explored list but
-               // it keeps iterating to there even though the cells are in the explored list. 
-               // need to find a way to have the explored.contains without checking the cost but only checkin row and column
+                // now i need to find a way when there is no such path, the bot needs to look for other paths.
+                // to look for other paths you need to explore the cells that you already explored before.
+
+                
             }
             // i need to check if we are really running every possible neighbors then do the strategy 2
             // i need to check if fire is spreading correctly when it gets to strategy 2
@@ -293,15 +365,6 @@ public class project{
             }
             
         }
-        // i need to add new cells to priority queue then iterate through those cells.
-        // before bot moves to any direction, it needs to have a clear shortest path, then it moves.
-        // it gets to here when it doesn't find any neighboring cells without being adjacent to fire cell
-        // if(getNeighborsWithoutAdjacentFireCells(grid, currentNode.row, currentNode.col) == null){
-        //     // If there is no such path, it plans the shortest path based only on current fire cells
-
-        // }
-        
-        
 
         // No path found.
         return false;
@@ -390,7 +453,7 @@ public class project{
             }
             
         }
-        printGrid(grid);
+        //printGrid(grid);
     }
     
     public static int countBurningNeighbors(String[][] grid, int row, int col) {
@@ -439,7 +502,8 @@ public class project{
      */
     public static String[][] createRandomGrid(int maxDimension, String x, String o) {
         random = new Random();
-        int d = random.nextInt(maxDimension) + 1;
+        //int d = random.nextInt(maxDimension) + 1;
+        int d = 3;
         
         // 1 - create a grid with cell and row size equal to d
         String[][] grid = new String[d][d];
@@ -593,8 +657,7 @@ public class project{
             }
         }
 
-        System.out.println("Total Dead Ends: " + totalDeadEnds);
-        System.out.println("Opened Dead Ends: " + openedDeadEnds);
+        
     }
 
     /**
